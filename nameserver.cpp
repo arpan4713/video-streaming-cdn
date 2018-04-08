@@ -86,3 +86,25 @@ void Nameserver::dns_listen() {
 
     log.close();
 }
+
+void Nameserver::parse_rr_addrs(string fname) {
+    std::ifstream file(fname);
+    std::string str;
+    while (std::getline(file, str))
+    {
+        ip_addrs.push_back(str);
+    }
+}
+
+string Nameserver::get_next_addr() {
+    if (geography_based == 0) {
+        string result = ip_addrs[rr_index];
+        rr_index = (rr_index+1)%ip_addrs.size();
+        return result;
+    } else if (geography_based == 1) {
+        // TODO: geography based calculations
+        return nullptr;
+    }
+
+    return nullptr;
+}

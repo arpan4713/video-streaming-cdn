@@ -28,24 +28,32 @@
 
 using std::string;
 using std::vector;
-using std::string;
 using std::cout;
 using std::endl;
 
 class Nameserver {
 public:
     Nameserver(string logfile, int listen_port, int geography_based, string servers):
-            logfile(logfile), listen_port(listen_port), geography_based(geography_based), servers(servers) {}
+            logfile(logfile), listen_port(listen_port), geography_based(geography_based){
+        if (geography_based == 0) {
+            rr_index = 0;
+            parse_rr_addrs(servers);
+        } else if (geography_based == 1) {
+            // geography based
+        }
+    }
     void dns_listen();
+    string get_next_addr();
 
 protected:
     string logfile;
     int listen_port;
     int geography_based;
-    string servers;
 
     int rr_index; // make sure to wrap around
-    vector<string> rr_addrs;
+    vector<string> ip_addrs;
+
+    void parse_rr_addrs(string);
 
 };
 

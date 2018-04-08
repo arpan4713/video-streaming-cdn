@@ -1,9 +1,9 @@
 #include "miProxy.h"
 
 int main(int argc, char const *argv[]) {
-  if (argc < 5)
+  if (argc < 6 || argc > 7)
   {
-    perror("Usage: ./miProxy <log> <alpha> <listen-port> <www-ip>");
+    perror("Usage: ./miProxy <log> <alpha> <listen-port> <dns-ip> <dns-port> [<www-ip>]");
     return -1;
   }
 
@@ -11,7 +11,17 @@ int main(int argc, char const *argv[]) {
   char * log_path = (char *) argv[1];
   float alpha = atof(argv[2]);
   int listen_port = atoi(argv[3]);
-  char * www_ip = (char *) argv[4];
+
+  if (argc >= 6) {
+    char * dns_ip = (char *) argv[4];
+    char * dns_port = atoi(argv[5]);
+
+    /* GET WWW_IP FROM NAMESERVER */
+  }
+
+  if (argc == 7) {
+    char * www_ip = (char *) argv[6];
+  }
 
   /* Create a socket */
   int sockfd = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
