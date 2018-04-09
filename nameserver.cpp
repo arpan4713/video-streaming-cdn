@@ -111,8 +111,12 @@ void Nameserver::parse_network_topo(string fname) {
     string line;
     getline(file, line);
     int num_nodes = atoi(get_value(line, "NUM_NODES"));
+
+    // initialize data structs
     for (int i = 0; i < num_nodes; i++) {
         vector<int> v;
+        node_types.push_back("");
+        node_ips.push_back("");
         for (int j = 0; j < num_nodes; j++) {
             v.push_back(0);
         }
@@ -120,17 +124,17 @@ void Nameserver::parse_network_topo(string fname) {
     }
 
     while (num_nodes > 0) {
-        getline(file, line);
-        // TODO: create map of nodes
-        // key: node ID, value: vector<int> client, ip
-//        0 CLIENT 10.0.0.1
-//        1 CLIENT 10.0.0.2
-//        2 SWITCH NO_IP
-//        3 SWITCH NO_IP
-//        4 SERVER 10.0.0.3
-//        5 SERVER 10.0.0.4
+        string node_id, node_type, node_ip;
+        getline(file, node_id, ' ');
+        getline(file, node_type, ' ');
+        getline(file, node_ip);
+        int id = atoi(node_id.c_str());
+        node_types[id] = node_type;
+        node_ips[id] = node_ip;
+        std::cout << node_ip << node_type << std::endl;
         num_nodes--;
     }
+
     getline(file, line);
     int num_links = atoi(get_value(line, "NUM_LINKS"));
     while (num_links > 0) {

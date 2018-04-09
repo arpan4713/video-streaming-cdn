@@ -40,6 +40,7 @@ public:
             parse_rr_addrs(servers);
         } else if (geography_based == 1) {
             // geography based
+            proxy_ip = "10.0.0.1"; // hardcoded, remove for later
             parse_network_topo(servers);
         }
     }
@@ -54,7 +55,11 @@ protected:
     int rr_index;
     vector<string> ip_addrs;
 
+    string proxy_ip;
     vector<vector<int>> network_topo; // adjacency matrix
+    vector<string> node_types; // node id (index) to node type
+    vector<string> node_ips; // node id to node IP
+    vector<int> dist; // distances src to each dst
 
     void parse_rr_addrs(string);
     void parse_network_topo(string);
