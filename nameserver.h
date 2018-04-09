@@ -40,11 +40,14 @@ public:
             parse_rr_addrs(servers);
         } else if (geography_based == 1) {
             // geography based
-            proxy_ip = "10.0.0.1"; // hardcoded, remove for later
+            proxy_ip = "10.0.0.2"; // hardcoded, remove for later
             parse_network_topo(servers);
+            cout << get_next_addr() << endl;
         }
     }
+
     void dns_listen();
+    int min_dist(bool[]);
     string get_next_addr();
 
 protected:
@@ -55,11 +58,12 @@ protected:
     int rr_index;
     vector<string> ip_addrs;
 
-    string proxy_ip;
+    string proxy_ip; // src IP for dijkstras
     vector<vector<int>> network_topo; // adjacency matrix
     vector<string> node_types; // node id (index) to node type
     vector<string> node_ips; // node id to node IP
     vector<int> dist; // distances src to each dst
+    int V; // num nodes
 
     void parse_rr_addrs(string);
     void parse_network_topo(string);

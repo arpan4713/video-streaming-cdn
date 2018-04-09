@@ -111,12 +111,14 @@ void Nameserver::parse_network_topo(string fname) {
     string line;
     getline(file, line);
     int num_nodes = atoi(get_value(line, "NUM_NODES"));
+    V = num_nodes;
 
     // initialize data structs
     for (int i = 0; i < num_nodes; i++) {
         vector<int> v;
         node_types.push_back("");
         node_ips.push_back("");
+        dist.push_back(INT_MAX);
         for (int j = 0; j < num_nodes; j++) {
             v.push_back(0);
         }
@@ -131,7 +133,6 @@ void Nameserver::parse_network_topo(string fname) {
         int id = atoi(node_id.c_str());
         node_types[id] = node_type;
         node_ips[id] = node_ip;
-        std::cout << node_ip << node_type << std::endl;
         num_nodes--;
     }
 
@@ -154,15 +155,63 @@ void Nameserver::parse_network_topo(string fname) {
     }
 }
 
+int Nameserver::min_dist(bool visited[]) {
+    int min = INT_MAX, min_index;
+
+    for (int v = 0; v < V; v++)
+        if (!visited[v] && dist[v] <= min)
+            min = dist[v], min_index = v;
+
+    return min_index;
+}
+
 string Nameserver::get_next_addr() {
     if (geography_based == 0) {
         string result = ip_addrs[rr_index];
         rr_index = (rr_index+1)%ip_addrs.size();
         return result;
-    } else if (geography_based == 1) {
-        // TODO: geography based calculations
-        return nullptr;
-    }
+    } else {
+        // get shortest path from src to a server node
+        int src = -1;
+        for (int i = 0; i < node_ips.size(); i++) {
+            if (node_ips[i] == proxy_ip && node_types[i] == "CLIENT") {
+                src = i;
+            }
+        }
+        if (src == -1) {
+            return nullptr; // TODO: handle error, proxy IP does not correspond to a node
+        }
 
-    return nullptr;
+        bool visited[V];
+
+        for (int i = 0; i < V; i++)
+            visited[i] = false;
+        dist[src] = 0;
+
+        // Find shortest path for all vertices
+        for (int count = 0; count < V-1; count++)
+        {
+            int u = min_dist(visited);
+
+            // Mark the picked vertex as processed
+            visited[u] = true;
+            // Update dist value of the adjacent vertices of the picked vertex.
+            for (int v = 0; v < V; v++)
+                if (!visited[v] && network_topo[u][v] && dist[u] != INT_MAX
+                    && dist[u]+network_topo[u][v] < dist[v])
+                    dist[v] = dist[u] + network_topo[u][v];
+        }
+
+        // print the constructed distance array
+        int min = INT_MAX;
+        int min_node_id = -1;
+        for (int i = 0; i < dist.size(); i++) {
+            if (dist[i] <= min && node_types[i] == "SERVER") {
+                min = dist[i];
+                min_node_id = i;
+            }
+        }
+
+        return node_ips[min_node_id];
+    }
 }
