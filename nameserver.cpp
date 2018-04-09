@@ -87,12 +87,66 @@ void Nameserver::dns_listen() {
     log.close();
 }
 
+const char* get_value(string str, string key) {
+    int key_index = str.find(key);
+    int space_index = str.find(' ', key_index);
+    int end = str.find('\n', key_index);
+    return str.substr(space_index + 1, end - space_index - 1).c_str();
+}
+
 void Nameserver::parse_rr_addrs(string fname) {
     std::ifstream file(fname);
     std::string str;
     while (std::getline(file, str))
     {
         ip_addrs.push_back(str);
+    }
+}
+
+// populate network topo using file
+void Nameserver::parse_network_topo(string fname) {
+    using std::string;
+    using std::getline;
+    std::ifstream file(fname);
+    string line;
+    getline(file, line);
+    int num_nodes = atoi(get_value(line, "NUM_NODES"));
+    for (int i = 0; i < num_nodes; i++) {
+        vector<int> v;
+        for (int j = 0; j < num_nodes; j++) {
+            v.push_back(0);
+        }
+        network_topo.push_back(v);
+    }
+
+    while (num_nodes > 0) {
+        getline(file, line);
+        // TODO: create map of nodes
+        // key: node ID, value: vector<int> client, ip
+//        0 CLIENT 10.0.0.1
+//        1 CLIENT 10.0.0.2
+//        2 SWITCH NO_IP
+//        3 SWITCH NO_IP
+//        4 SERVER 10.0.0.3
+//        5 SERVER 10.0.0.4
+        num_nodes--;
+    }
+    getline(file, line);
+    int num_links = atoi(get_value(line, "NUM_LINKS"));
+    while (num_links > 0) {
+        string source, dest, cost;
+        getline(file, source, ' ');
+        getline(file, dest, ' ');
+        getline(file, cost);
+
+        int s, d, c;
+        s = atoi(source.c_str());
+        d = atoi(dest.c_str());
+        c = atoi(cost.c_str());
+        network_topo[s][d] = c;
+        network_topo[d][s] = c;
+
+        num_links--;
     }
 }
 

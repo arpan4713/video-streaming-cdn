@@ -40,6 +40,7 @@ public:
             parse_rr_addrs(servers);
         } else if (geography_based == 1) {
             // geography based
+            parse_network_topo(servers);
         }
     }
     void dns_listen();
@@ -50,10 +51,13 @@ protected:
     int listen_port;
     int geography_based;
 
-    int rr_index; // make sure to wrap around
+    int rr_index;
     vector<string> ip_addrs;
 
+    vector<vector<int>> network_topo; // adjacency matrix
+
     void parse_rr_addrs(string);
+    void parse_network_topo(string);
 
 };
 
