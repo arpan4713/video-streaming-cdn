@@ -14,6 +14,7 @@ int main(int argc, char const *argv[]) {
   char * listen_port = (char *) argv[3];
 
   char * www_ip;
+
   if (argc == 6) {
     char * dns_ip = (char *) argv[4];
     char * dns_port = (char *) argv[5];
@@ -72,17 +73,16 @@ int main(int argc, char const *argv[]) {
     // Deserialize and recv DNS message
     int bytes_recv;
     DNSMessage dns_response;
-    struct sockaddr_in their_addr;
-    their_addr.sin_family = AF_UNSPEC;
-    inet_pton(AF_INET, dns_ip, &(their_addr.sin_addr));
-    their_addr.sin_port = htons( atoi(dns_port) );
 
-    socklen_t addr_len = sizeof(their_addr);
-//    if ((bytes_recv = recvfrom(dns_sockfd, reinterpret_cast<char*>(&dns_response), MAXPACKETSIZE-1 , 0,
-//                             (struct sockaddr *)&their_addr, addr_len)) == -1) {
-//      perror("recvfrom");
-//      exit(1);
-//    }
+    if ((bytes_recv = recvfrom(dns_sockfd, reinterpret_cast<char*>(&dns_response), MAXPACKETSIZE-1 , 0,
+                               p->ai_addr, &p->ai_addrlen)) == -1) {
+      perror("recvfrom");
+      exit(1);
+    }
+
+    cout << dns_response.answer.RDATA << endl;
+
+    strcpy(www_ip, dns_response.answer.RDATA); // segfault here
 
     freeaddrinfo(servinfo);
 

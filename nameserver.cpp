@@ -73,30 +73,27 @@ void Nameserver::dns_listen() {
 
     freeaddrinfo(servinfo);
 
-    DNSMessage message; // deserialization assumes both hosts use same platform/architecture
+    DNSMessage message; // deserialization assumes little endian
 
     addr_len = sizeof(their_addr);
     if ((numbytes = recvfrom(sockfd, reinterpret_cast<char*>(&message), MAXPACKETSIZE-1 , 0,
-                             (struct sockaddr *)&their_addr, (socklen_t *) addr_len)) == -1) {
+                             (struct sockaddr *)&their_addr, &addr_len)) == -1) {
         perror("recvfrom");
         exit(1);
     }
 
-    printf("listener: got packet from %s\n",
-           inet_ntop(their_addr.ss_family,
-                     get_in_addr((struct sockaddr *)&their_addr),
-                     s, sizeof s));
-    printf("listener: packet is %d bytes long\n", numbytes);
-
-    cout << message.question.QNAME << endl;
+    inet_ntop(their_addr.ss_family,
+              get_in_addr((struct sockaddr *)&their_addr),
+              s, sizeof s);
 
     strcpy(message.answer.RDATA, get_next_addr().c_str());
 
+    cout << message.answer.RDATA << endl;
     // send to client the DNS response
-//    if ((numbytes = sendto(sockfd, reinterpret_cast<const char*>(&message), sizeof(message), 0,
-//                           (struct sockaddr *)&their_addr, (socklen_t *) addr_len)) == -1) {
-//        exit(1);
-//    }
+    if ((numbytes = sendto(sockfd, reinterpret_cast<const char*>(&message), sizeof(message), 0,
+                           (struct sockaddr *)&their_addr, addr_len)) == -1) {
+        exit(1);
+    }
 
     close(sockfd);
     /* End UDP Server */
