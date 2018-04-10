@@ -10,16 +10,54 @@ int main(int argc, char const *argv[]) {
   /* Parse cmd arguments */
   char * log_path = (char *) argv[1];
   float alpha = atof(argv[2]);
-  int listen_port = atoi(argv[3]);
+  char * listen_port = (char *) argv[3];
 
-  if (argc >= 6) {
+  char * www_ip;
+  if (argc == 6) {
     char * dns_ip = (char *) argv[4];
-    char * dns_port = atoi(argv[5]);
+    char * dns_port = (char *) argv[5];
 
     /* GET WWW_IP FROM NAMESERVER */
-  }
+    int dns_sockfd;
+    struct addrinfo hints, *servinfo, *p;
+    int rv;
+    int numbytes;
 
-  if (argc == 7) {
+    memset(&hints, 0, sizeof hints);
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_DGRAM;
+
+    if ((rv = getaddrinfo(dns_ip, dns_port, &hints, &servinfo)) != 0) {
+      fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
+      return 1;
+    }
+
+    // loop through all the results and make a socket
+    for(p = servinfo; p != NULL; p = p->ai_next) {
+      if ((dns_sockfd = socket(p->ai_family, p->ai_socktype,
+                           p->ai_protocol)) == -1) {
+        perror("talker: socket");
+        continue;
+      }
+
+      break;
+    }
+
+    string message = "hello there";
+
+    www_ip = (char *) message.c_str();
+
+    if ((numbytes = sendto(dns_sockfd, message.c_str(), strlen(message.c_str()), 0,
+                           p->ai_addr, p->ai_addrlen)) == -1) {
+      perror("talker: sendto");
+      exit(1);
+    }
+
+    freeaddrinfo(servinfo);
+
+    printf("talker: sent %d bytes to %s\n", numbytes, dns_ip);
+    close(dns_sockfd);
+  } else {
     char * www_ip = (char *) argv[6];
   }
 
@@ -36,7 +74,7 @@ int main(int argc, char const *argv[]) {
   struct sockaddr_in proxy_addr;
   proxy_addr.sin_family = AF_INET;
   proxy_addr.sin_addr.s_addr = INADDR_ANY;
-  proxy_addr.sin_port = htons(listen_port);
+  proxy_addr.sin_port = htons( atoi(listen_port) );
 
 
   /* Binding */

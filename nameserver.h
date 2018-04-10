@@ -24,6 +24,14 @@
 #include <iostream>
 #include <string>
 
+#include <cassert>
+#include <sys/types.h>
+#include <netdb.h>
+#include <arpa/inet.h>
+#include <sys/wait.h>
+#include <csignal>
+#include <sys/time.h>
+
 #define MAXPACKETSIZE 65536
 
 using std::string;
@@ -33,7 +41,7 @@ using std::endl;
 
 class Nameserver {
 public:
-    Nameserver(string logfile, int listen_port, int geography_based, string servers):
+    Nameserver(string logfile, string listen_port, int geography_based, string servers):
             logfile(logfile), listen_port(listen_port), geography_based(geography_based){
         if (geography_based == 0) {
             rr_index = 0;
@@ -52,7 +60,7 @@ public:
 
 protected:
     string logfile;
-    int listen_port;
+    string listen_port;
     int geography_based;
 
     int rr_index;

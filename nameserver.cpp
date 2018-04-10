@@ -8,7 +8,7 @@ int main(int argc, char const *argv[]) {
     }
 
     string log = argv[1];
-    int port = atoi(argv[2]);
+    string port = argv[2];
     int g = atoi(argv[3]);
     string servers = argv[4];
 
@@ -34,55 +34,67 @@ void Nameserver::dns_listen() {
     std::ofstream log;
     log.open(logfile);
 
-    int sock_fd, browser_sockfd;
-    struct sockaddr_in address;
-    int addrlen = sizeof(address);
-    char buffer[1024] = {0};
-    int yes = 1;
-    char request[MAXPACKETSIZE], response[MAXPACKETSIZE];
+    int sockfd;
+    struct addrinfo hints, *servinfo, *p;
+    int rv;
+    int numbytes;
+    struct sockaddr_storage their_addr;
+    char buf[MAXPACKETSIZE];
+    socklen_t addr_len;
+    char s[INET6_ADDRSTRLEN];
 
-    // create socket using TCP
-    if ((sock_fd = socket(AF_INET, SOCK_STREAM, 0)) <= 0)
-    {
-        perror("socket failed");
-        exit(EXIT_FAILURE);
+    memset(&hints, 0, sizeof hints);
+    hints.ai_family = AF_UNSPEC; // set to AF_INET to force IPv4
+    hints.ai_socktype = SOCK_DGRAM;
+    hints.ai_flags = AI_PASSIVE; // use my IP
+
+    if ((rv = getaddrinfo(NULL, listen_port.c_str(), &hints, &servinfo)) != 0) {
+        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
+//        return 1;
     }
 
-    if (setsockopt(sock_fd, SOL_SOCKET, SO_REUSEADDR, &yes,
-                   sizeof(int)) == -1) {
-        perror("setsockopt");
+    // loop through all the results and bind to the first we can
+    for(p = servinfo; p != NULL; p = p->ai_next) {
+        if ((sockfd = socket(p->ai_family, p->ai_socktype,
+                             p->ai_protocol)) == -1) {
+            perror("listener: socket");
+            continue;
+        }
+
+        if (bind(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
+            close(sockfd);
+            perror("listener: bind");
+            continue;
+        }
+
+        break;
     }
 
-    address.sin_family = AF_INET;
-    address.sin_addr.s_addr = INADDR_ANY;
-    address.sin_port = htons( listen_port );
+//    if (p == NULL) {
+//        fprintf(stderr, "listener: failed to bind socket\n");
+//        return 2;
+//    }
 
-    // attach socket to port
-    int bind_result = bind(sock_fd, (struct sockaddr *) &address, sizeof(address));
-    if (bind_result<0)
-    {
-        perror("bind failed");
-        exit(EXIT_FAILURE);
+    freeaddrinfo(servinfo);
+
+    printf("listener: waiting to recvfrom...\n");
+
+    addr_len = sizeof their_addr;
+    if ((numbytes = recvfrom(sockfd, buf, MAXPACKETSIZE-1 , 0,
+                             (struct sockaddr *)&their_addr, &addr_len)) == -1) {
+        perror("recvfrom");
+        exit(1);
     }
 
-    // listen on socket
-    if (listen(sock_fd, 10) < 0)
-    {
-        perror("listen");
-        exit(EXIT_FAILURE);
-    }
+    printf("listener: got packet from %s\n",
+           inet_ntop(their_addr.ss_family,
+                     get_in_addr((struct sockaddr *)&their_addr),
+                     s, sizeof s));
+    printf("listener: packet is %d bytes long\n", numbytes);
+    buf[numbytes] = '\0';
+    printf("listener: packet contains \"%s\"\n", buf);
 
-    // get DNS request from client
-    if ((browser_sockfd = accept(sock_fd, (struct sockaddr *)&address,
-                                 (socklen_t*)&addrlen))<0)
-    {
-        perror("accept");
-        exit(EXIT_FAILURE);
-    }
-
-    inet_ntop(address.sin_family,
-              get_in_addr((struct sockaddr *)&address),
-              buffer, sizeof buffer);
+    close(sockfd);
 
     log.close();
 }
