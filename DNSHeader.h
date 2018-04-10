@@ -3,7 +3,7 @@
 
 struct DNSHeader
 {
-	ushort ID;
+	unsigned short int ID;
 	bool QR;
 	int OPCODE;
 	bool AA;
@@ -12,10 +12,10 @@ struct DNSHeader
 	bool RA;
 	char Z;
 	char RCODE;
-	ushort QDCOUNT;
-	ushort ANCOUNT;
-	ushort NSCOUNT;
-	ushort ARCOUNT;
+	unsigned short int QDCOUNT;
+	unsigned short int ANCOUNT;
+	unsigned short int NSCOUNT;
+	unsigned short int ARCOUNT;
 };
 
 #endif

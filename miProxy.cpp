@@ -1,4 +1,5 @@
 #include "miProxy.h"
+#include "dns_lib.h"
 
 int main(int argc, char const *argv[]) {
   if (argc < 6 || argc > 7)
@@ -43,15 +44,45 @@ int main(int argc, char const *argv[]) {
       break;
     }
 
-    string message = "hello there";
+    // set DNS headers n stuff, leave answer blank
 
-    www_ip = (char *) message.c_str();
+    DNSQuestion q;
+    strcpy(q.QNAME, "video.cs.jhu.edu");
+    q.QCLASS = 1;
+    q.QTYPE = 1;
 
-    if ((numbytes = sendto(dns_sockfd, message.c_str(), strlen(message.c_str()), 0,
+    DNSHeader h;
+    h.AA = 0;
+    h.RD = 0;
+    h.RA = 0;
+    h.Z = 0;
+    h.NSCOUNT = 0;
+    h.ARCOUNT = 0;
+
+    DNSMessage message;
+    message.question = q;
+    message.header = h;
+
+    // Serialize and send DNS message struct
+    if ((numbytes = sendto(dns_sockfd, reinterpret_cast<const char*>(&message), sizeof(message), 0,
                            p->ai_addr, p->ai_addrlen)) == -1) {
-      perror("talker: sendto");
       exit(1);
     }
+
+    // Deserialize and recv DNS message
+    int bytes_recv;
+    DNSMessage dns_response;
+    struct sockaddr_in their_addr;
+    their_addr.sin_family = AF_UNSPEC;
+    inet_pton(AF_INET, dns_ip, &(their_addr.sin_addr));
+    their_addr.sin_port = htons( atoi(dns_port) );
+
+    socklen_t addr_len = sizeof(their_addr);
+//    if ((bytes_recv = recvfrom(dns_sockfd, reinterpret_cast<char*>(&dns_response), MAXPACKETSIZE-1 , 0,
+//                             (struct sockaddr *)&their_addr, addr_len)) == -1) {
+//      perror("recvfrom");
+//      exit(1);
+//    }
 
     freeaddrinfo(servinfo);
 
@@ -60,6 +91,8 @@ int main(int argc, char const *argv[]) {
   } else {
     char * www_ip = (char *) argv[6];
   }
+
+  cout << www_ip << endl;
 
   /* Create a socket */
   int sockfd = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);

@@ -24,13 +24,6 @@
 #include <iostream>
 #include <string>
 
-#include <cassert>
-#include <sys/types.h>
-#include <netdb.h>
-#include <arpa/inet.h>
-#include <sys/wait.h>
-#include <csignal>
-#include <sys/time.h>
 
 #define MAXPACKETSIZE 65536
 

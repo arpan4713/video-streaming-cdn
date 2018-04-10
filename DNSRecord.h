@@ -6,10 +6,10 @@
 struct DNSRecord
 {
 	char NAME[100];
-	ushort TYPE;
-	ushort CLASS;
-	ushort TTL;
-	ushort RDLENGTH;
+	unsigned short int TYPE;
+	unsigned short int CLASS;
+	unsigned short int TTL;
+	unsigned short int RDLENGTH;
 	char RDATA[100];
 
 	DNSRecord()

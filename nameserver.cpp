@@ -1,4 +1,5 @@
 #include "nameserver.h"
+#include "dns_lib.h"
 
 int main(int argc, char const *argv[]) {
     if (argc != 5)
@@ -15,7 +16,6 @@ int main(int argc, char const *argv[]) {
     Nameserver ns(log, port, g, servers);
     ns.dns_listen();
 
-    cout << log << port << g << servers << endl;
     return 0;
 }
 
@@ -34,6 +34,7 @@ void Nameserver::dns_listen() {
     std::ofstream log;
     log.open(logfile);
 
+    /* Start UDP Server */
     int sockfd;
     struct addrinfo hints, *servinfo, *p;
     int rv;
@@ -50,7 +51,7 @@ void Nameserver::dns_listen() {
 
     if ((rv = getaddrinfo(NULL, listen_port.c_str(), &hints, &servinfo)) != 0) {
         fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
-//        return 1;
+        exit(1);
     }
 
     // loop through all the results and bind to the first we can
@@ -70,18 +71,13 @@ void Nameserver::dns_listen() {
         break;
     }
 
-//    if (p == NULL) {
-//        fprintf(stderr, "listener: failed to bind socket\n");
-//        return 2;
-//    }
-
     freeaddrinfo(servinfo);
 
-    printf("listener: waiting to recvfrom...\n");
+    DNSMessage message; // deserialization assumes both hosts use same platform/architecture
 
-    addr_len = sizeof their_addr;
-    if ((numbytes = recvfrom(sockfd, buf, MAXPACKETSIZE-1 , 0,
-                             (struct sockaddr *)&their_addr, &addr_len)) == -1) {
+    addr_len = sizeof(their_addr);
+    if ((numbytes = recvfrom(sockfd, reinterpret_cast<char*>(&message), MAXPACKETSIZE-1 , 0,
+                             (struct sockaddr *)&their_addr, (socklen_t *) addr_len)) == -1) {
         perror("recvfrom");
         exit(1);
     }
@@ -91,10 +87,19 @@ void Nameserver::dns_listen() {
                      get_in_addr((struct sockaddr *)&their_addr),
                      s, sizeof s));
     printf("listener: packet is %d bytes long\n", numbytes);
-    buf[numbytes] = '\0';
-    printf("listener: packet contains \"%s\"\n", buf);
+
+    cout << message.question.QNAME << endl;
+
+    strcpy(message.answer.RDATA, get_next_addr().c_str());
+
+    // send to client the DNS response
+//    if ((numbytes = sendto(sockfd, reinterpret_cast<const char*>(&message), sizeof(message), 0,
+//                           (struct sockaddr *)&their_addr, (socklen_t *) addr_len)) == -1) {
+//        exit(1);
+//    }
 
     close(sockfd);
+    /* End UDP Server */
 
     log.close();
 }

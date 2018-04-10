@@ -6,8 +6,8 @@
 struct DNSQuestion
 {
 	char QNAME[100];
-	ushort QTYPE;
-	ushort QCLASS;
+	unsigned short int QTYPE;
+	unsigned short int QCLASS;
 
 	DNSQuestion()
 	{

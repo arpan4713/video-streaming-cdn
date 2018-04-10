@@ -1,3 +1,6 @@
+#ifndef _MIPROXY_H
+#define _MIPROXY_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/socket.h>
@@ -22,6 +25,7 @@
 #include <sys/time.h>
 
 #define BACKLOG 10
+#define MAXPACKETSIZE 65536
 
 using std::string;
 using std::to_string;
@@ -37,3 +41,5 @@ bool check_video_data(string str);
 string get_value(string str, string key);
 string recv_response(int server_sd);
 string get_chunkname(string request);
+
+#endif
