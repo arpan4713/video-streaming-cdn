@@ -13,7 +13,7 @@ int main(int argc, char const *argv[]) {
   float alpha = atof(argv[2]);
   char * listen_port = (char *) argv[3];
 
-  char * www_ip;
+  string ip;
 
   if (argc == 6) {
     char * dns_ip = (char *) argv[4];
@@ -80,19 +80,15 @@ int main(int argc, char const *argv[]) {
       exit(1);
     }
 
-    cout << dns_response.answer.RDATA << endl;
-
-    strcpy(www_ip, dns_response.answer.RDATA); // segfault here
-
+    ip = string(dns_response.answer.RDATA);
     freeaddrinfo(servinfo);
 
-    printf("talker: sent %d bytes to %s\n", numbytes, dns_ip);
     close(dns_sockfd);
   } else {
-    char * www_ip = (char *) argv[6];
+    ip = string(argv[6]);
   }
 
-  cout << www_ip << endl;
+  char * www_ip = (char *) ip.c_str();
 
   /* Create a socket */
   int sockfd = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
