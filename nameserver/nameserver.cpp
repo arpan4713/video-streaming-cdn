@@ -87,7 +87,7 @@ void Nameserver::dns_listen() {
         proxy_ip = string(inet_ntop(their_addr.ss_family,
                   get_in_addr((struct sockaddr *)&their_addr),
                   s, sizeof s));
-        
+
         strcpy(message.answer.RDATA, get_next_addr().c_str());
 
 //        cout << message.answer.RDATA << endl;

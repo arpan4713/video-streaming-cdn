@@ -23,11 +23,11 @@ class testNetwork(Topo):
         h4 = self.addHost('h4') # 10.0.0.4
         s1 = self.addSwitch('s1')
         s2 = self.addSwitch('s2')
-        self.addLink(h1, s1, bw=10)  # max video for miProxy 1 is 10
-        self.addLink(h2, s1, bw=500)
-        self.addLink(s1, s2, bw=1000)
-        self.addLink(s2, h3, bw=1000)
-        self.addLink(s2, h4, bw=1000)
+        self.addLink(h1, s1, bw=.5)
+        self.addLink(h2, s1, bw=.5)
+        self.addLink(s1, s2, bw=.5)
+        self.addLink(s2, h3, bw=.5)
+        self.addLink(s2, h4, bw=.5)
 
 def connectToRootNS( network, switch, ip, routes ):
     """Connect hosts to root namespace via switch. Starts network.
