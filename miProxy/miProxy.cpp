@@ -81,7 +81,7 @@ int main(int argc, char const *argv[]) {
     }
 
     ip = string(dns_response.answer.RDATA);
-    cout <<  dns_response.answer.RDATA << endl;
+//    cout <<  dns_response.answer.NAME << " " << dns_response.answer.TTL << " " << dns_response.answer.CLASS << " " << dns_response.answer.TYPE << " " << dns_response.answer.RDATA << endl;
     freeaddrinfo(servinfo);
 
     close(dns_sockfd);
@@ -172,7 +172,6 @@ int main(int argc, char const *argv[]) {
             else
             {
                 fds.push_back(clientsd);
-                printf("client: %d\n", clientsd);
             }
         }
 
@@ -197,6 +196,7 @@ int main(int argc, char const *argv[]) {
                         printf("%s %d\n", __FUNCTION__, __LINE__);
                         cout << "Error recving bytes" << endl;
                         cout << strerror(errno) << endl;
+                        close(sockfd);
                         exit(1);
                     }
                     else if(bytesRecvd == 0) //end of recv
@@ -270,6 +270,7 @@ int main(int argc, char const *argv[]) {
                     if (server_sd < 0) {
                         printf("%s %d\n", __FUNCTION__, __LINE__);
                         perror("socket");
+                        close(sockfd);
                         return -1;
                     }
 

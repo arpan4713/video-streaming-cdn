@@ -73,7 +73,7 @@ void Nameserver::dns_listen() {
 
     freeaddrinfo(servinfo);
 
-    DNSMessage message; // deserialization assumes little endian
+    DNSMessage message; // deserialization
 
     addr_len = sizeof(their_addr);
 
@@ -90,10 +90,12 @@ void Nameserver::dns_listen() {
 
         strcpy(message.answer.RDATA, get_next_addr().c_str());
 
-//        cout << message.answer.RDATA << endl;
         message.header.AA = 1;
         message.answer.TYPE = 1;
         message.answer.CLASS = 1;
+        message.answer.TTL = 0;
+        strcpy(message.answer.NAME, message.question.QNAME);
+        message.answer.RDLENGTH = strlen(message.answer.RDATA);
 
         // send to client the DNS response
         if ((numbytes = sendto(sockfd, reinterpret_cast<const char*>(&message), sizeof(message), 0,
