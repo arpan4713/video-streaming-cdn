@@ -19,7 +19,7 @@ h2 = nameserver
 h3 = video server
 h4 = video server
 
-1. Run video server on h3 and h4 (from script)
+1. Run video server on h3 and h4 (or run python tester.py)
 2. xterm h1
 3. xterm h2
 4. Run nameserver on h2 as `./nameserver/nameserver/ nsLog 4000 <0,1> <servers>`

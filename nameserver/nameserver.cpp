@@ -88,14 +88,18 @@ void Nameserver::dns_listen() {
                   get_in_addr((struct sockaddr *)&their_addr),
                   s, sizeof s));
 
-        strcpy(message.answer.RDATA, get_next_addr().c_str());
-
-        message.header.AA = 1;
-        message.answer.TYPE = 1;
-        message.answer.CLASS = 1;
-        message.answer.TTL = 0;
-        strcpy(message.answer.NAME, message.question.QNAME);
-        message.answer.RDLENGTH = strlen(message.answer.RDATA);
+        if (string(message.question.QNAME) != "video.cs.jhu.edu") {
+            message.header.RCODE = '3';
+            strcpy(message.answer.RDATA, "NO_IP");
+        } else {
+            strcpy(message.answer.RDATA, get_next_addr().c_str());
+            message.header.AA = 1;
+            message.answer.TYPE = 1;
+            message.answer.CLASS = 1;
+            message.answer.TTL = 0;
+            strcpy(message.answer.NAME, message.question.QNAME);
+            message.answer.RDLENGTH = strlen(message.answer.RDATA);
+        }
 
         // send to client the DNS response
         if ((numbytes = sendto(sockfd, reinterpret_cast<const char*>(&message), sizeof(message), 0,
@@ -205,7 +209,8 @@ string Nameserver::get_next_addr() {
             }
         }
         if (src == -1) {
-            return nullptr; // TODO: handle error, proxy IP does not correspond to a node
+            cout << "proxy IP does not correspond to a node" << endl;
+            return nullptr;
         }
 
         bool visited[V];

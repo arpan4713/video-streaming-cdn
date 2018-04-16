@@ -2,94 +2,99 @@
 #include "../nameserver/DNSMessage.h"
 
 int main(int argc, char const *argv[]) {
-  if (argc < 6 || argc > 7)
-  {
-    perror("Usage: ./miProxy <log> <alpha> <listen-port> <dns-ip> <dns-port> [<www-ip>]");
-    return -1;
-  }
-
-  /* Parse cmd arguments */
-  char * log_path = (char *) argv[1];
-  float alpha = atof(argv[2]);
-  int listen_port = atoi(argv[3]);
-
-  string ip;
-
-  if (argc == 6) {
-    char * dns_ip = (char *) argv[4];
-    char * dns_port = (char *) argv[5];
-
-    /* GET WWW_IP FROM NAMESERVER */
-    int dns_sockfd;
-    struct addrinfo hints, *servinfo, *p;
-    int rv;
-    int numbytes;
-
-    memset(&hints, 0, sizeof hints);
-    hints.ai_family = AF_UNSPEC;
-    hints.ai_socktype = SOCK_DGRAM;
-
-    if ((rv = getaddrinfo(dns_ip, dns_port, &hints, &servinfo)) != 0) {
-      fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
-      return 1;
+    if (argc < 6 || argc > 7)
+    {
+        perror("Usage: ./miProxy <log> <alpha> <listen-port> <dns-ip> <dns-port> [<www-ip>]");
+        return -1;
     }
 
-    // loop through all the results and make a socket
-    for(p = servinfo; p != NULL; p = p->ai_next) {
-      if ((dns_sockfd = socket(p->ai_family, p->ai_socktype,
-                           p->ai_protocol)) == -1) {
-        perror("talker: socket");
-        continue;
-      }
+    /* Parse cmd arguments */
+    char * log_path = (char *) argv[1];
+    float alpha = atof(argv[2]);
+    int listen_port = atoi(argv[3]);
 
-      break;
+    string ip;
+
+    if (argc == 6) {
+        char * dns_ip = (char *) argv[4];
+        char * dns_port = (char *) argv[5];
+
+        /* GET WWW_IP FROM NAMESERVER */
+        int dns_sockfd;
+        struct addrinfo hints, *servinfo, *p;
+        int rv;
+        int numbytes;
+
+        memset(&hints, 0, sizeof hints);
+        hints.ai_family = AF_UNSPEC;
+        hints.ai_socktype = SOCK_DGRAM;
+
+        if ((rv = getaddrinfo(dns_ip, dns_port, &hints, &servinfo)) != 0) {
+            fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
+            return 1;
+        }
+
+        // loop through all the results and make a socket
+        for(p = servinfo; p != NULL; p = p->ai_next) {
+            if ((dns_sockfd = socket(p->ai_family, p->ai_socktype,
+                                     p->ai_protocol)) == -1) {
+                perror("talker: socket");
+                continue;
+            }
+
+            break;
+        }
+
+        // set DNS headers n stuff, leave answer blank
+
+        DNSQuestion q;
+        strcpy(q.QNAME, "video.cs.jhu.edu");
+        q.QCLASS = 1;
+        q.QTYPE = 1;
+
+        DNSHeader h;
+        h.AA = 0;
+        h.RD = 0;
+        h.RA = 0;
+        h.Z = 0;
+        h.NSCOUNT = 0;
+        h.ARCOUNT = 0;
+
+        DNSMessage message;
+        message.question = q;
+        message.header = h;
+
+        // Serialize and send DNS message struct
+        if ((numbytes = sendto(dns_sockfd, reinterpret_cast<const char*>(&message), sizeof(message), 0,
+                               p->ai_addr, p->ai_addrlen)) == -1) {
+            exit(1);
+        }
+
+        // Deserialize and recv DNS message
+        int bytes_recv;
+        DNSMessage dns_response;
+
+        if ((bytes_recv = recvfrom(dns_sockfd, reinterpret_cast<char*>(&dns_response), MAXPACKETSIZE-1 , 0,
+                                   p->ai_addr, &p->ai_addrlen)) == -1) {
+            perror("recvfrom");
+            exit(1);
+        }
+
+        if (dns_response.header.RCODE == '3') {
+            cout << "RCODE = 3; domain name does not exist" << endl;
+            exit(1);
+        }
+
+
+        ip = string(dns_response.answer.RDATA);
+        freeaddrinfo(servinfo);
+
+        close(dns_sockfd);
+    } else {
+        ip = string(argv[6]);
     }
 
-    // set DNS headers n stuff, leave answer blank
-
-    DNSQuestion q;
-    strcpy(q.QNAME, "video.cs.jhu.edu");
-    q.QCLASS = 1;
-    q.QTYPE = 1;
-
-    DNSHeader h;
-    h.AA = 0;
-    h.RD = 0;
-    h.RA = 0;
-    h.Z = 0;
-    h.NSCOUNT = 0;
-    h.ARCOUNT = 0;
-
-    DNSMessage message;
-    message.question = q;
-    message.header = h;
-
-    // Serialize and send DNS message struct
-    if ((numbytes = sendto(dns_sockfd, reinterpret_cast<const char*>(&message), sizeof(message), 0,
-                           p->ai_addr, p->ai_addrlen)) == -1) {
-      exit(1);
-    }
-
-    // Deserialize and recv DNS message
-    int bytes_recv;
-    DNSMessage dns_response;
-
-    if ((bytes_recv = recvfrom(dns_sockfd, reinterpret_cast<char*>(&dns_response), MAXPACKETSIZE-1 , 0,
-                               p->ai_addr, &p->ai_addrlen)) == -1) {
-      perror("recvfrom");
-      exit(1);
-    }
-
-    ip = string(dns_response.answer.RDATA);
-//    cout <<  dns_response.answer.NAME << " " << dns_response.answer.TTL << " " << dns_response.answer.CLASS << " " << dns_response.answer.TYPE << " " << dns_response.answer.RDATA << endl;
-    freeaddrinfo(servinfo);
-
-    close(dns_sockfd);
-  } else {
-    ip = string(argv[6]);
-  }
-
-  char * www_ip = (char *) ip.c_str();
+    char * www_ip = (char *) ip.c_str();
 
     /* Create a socket */
     int sockfd = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);

@@ -10,8 +10,6 @@ struct DNSMessage
     DNSHeader header;
     DNSQuestion question;
     DNSRecord answer;
-    DNSRecord authority;
-    DNSRecord additional;
 };
 
 
