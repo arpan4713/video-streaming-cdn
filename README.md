@@ -4,6 +4,7 @@ Implemented adaptive bitrate selection, DNS load balancing (round-robin and geog
 ## Included:
 * miProxy: an HTTP proxy using TCP client and server connection that parses and modifies outgoing HTTP requests to the server (adaptive bitrate)
 * nameserver: TCP server that listens on requests from miProxy to perform load balancing and server selection
+  * DNS header and message structs to parse and handle rerouting 
 
 ## To compile:
 Run `make` from the root directory. Make sure to cd to `nameserver` and to `miProxy` and `make clean` inside each
