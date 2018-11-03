@@ -1,7 +1,9 @@
-Andrew Wong
-awong52@jhu.edu
-601.414 Computer Networks
-Assignment 3 README
+# Video Streaming via CDN
+Implemented adaptive bitrate selection, DNS load balancing (round-robin and geographic using Dijkstra's), and an HTTP proxy server to stream video at high bit rates from the closest server to a given client.
+
+## Included:
+* miProxy: an HTTP proxy using TCP client and server connection that parses and modifies outgoing HTTP requests to the server (adaptive bitrate)
+* nameserver: TCP server that listens on requests from miProxy to perform load balancing and server selection
 
 ## To compile:
 Run `make` from the root directory. Make sure to cd to `nameserver` and to `miProxy` and `make clean` inside each
