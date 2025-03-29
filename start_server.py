@@ -11,4 +11,4 @@ if not conf.isdigit() or not (1 <= int(conf) <= 8):
     print('Error: <host_number> must be between 1 and 8')
     sys.exit(1)
 
-subprocess.call(["/usr/local/apache2/bin/apachectl", "-f", f"/home/proj2/.confs/httpd{conf}.conf"])
+subprocess.call(["/usr/sbin/apachectl", "-f", f"/home/proj2/.confs/httpd{conf}.conf"])
